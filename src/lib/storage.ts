@@ -1,10 +1,19 @@
 import type { AppData, Expense, Budget, Group } from '../types'
 
-const KEY = 'sb-v3'
+// Namespace storage key by user so each account has isolated data
+let _userId = 'guest'
+
+export function setStorageUser(uid: string) {
+  _userId = uid
+}
+
+function key() {
+  return `sb-v3-${_userId}`
+}
 
 function load(): AppData {
   try {
-    const raw = localStorage.getItem(KEY)
+    const raw = localStorage.getItem(key())
     if (!raw) return { expenses: [], budgets: {}, groups: [] }
     return JSON.parse(raw) as AppData
   } catch {
@@ -13,7 +22,7 @@ function load(): AppData {
 }
 
 function save(data: AppData) {
-  localStorage.setItem(KEY, JSON.stringify(data))
+  localStorage.setItem(key(), JSON.stringify(data))
 }
 
 export const storage = {

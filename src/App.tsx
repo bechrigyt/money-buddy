@@ -1,19 +1,29 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sidebar } from './components/layout/Sidebar'
 import { BottomNav } from './components/layout/BottomNav'
 import { PersonalTab } from './pages/PersonalTab'
 import { ChartsTab } from './pages/ChartsTab'
 import { GroupTab } from './pages/GroupTab'
+import { LoginPage } from './pages/LoginPage'
+import { useAuth } from './contexts/AuthContext'
 import { useExpenses } from './hooks/useExpenses'
 import { useBudget } from './hooks/useBudget'
 import { useGroups } from './hooks/useGroups'
 import { monthKey } from './lib/format'
+import { setStorageUser } from './lib/storage'
+import { LogOut } from 'lucide-react'
 
 type Tab = 'personal' | 'charts' | 'group'
 
-export default function App() {
+function AppShell() {
+  const { user, signOut } = useAuth()
   const [tab, setTab] = useState<Tab>('personal')
   const [currentMonth, setCurrentMonth] = useState(monthKey())
+
+  // Point storage at this user's namespace
+  useEffect(() => {
+    if (user) setStorageUser(user.id)
+  }, [user?.id])
 
   const { expenses, addExpense, deleteExpense } = useExpenses()
   const { getBudget, setBudget } = useBudget()
@@ -27,6 +37,16 @@ export default function App() {
   return (
     <div className="min-h-svh bg-gray-50">
       <Sidebar active={tab} onChange={setTab} />
+
+      {/* Sign-out button — top right */}
+      <button
+        onClick={signOut}
+        title="Sign out"
+        className="fixed top-3 right-3 z-50 flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 bg-white border border-gray-100 rounded-lg px-2.5 py-1.5 shadow-sm transition-colors"
+      >
+        <LogOut size={13} />
+        <span className="hidden sm:inline">Sign out</span>
+      </button>
 
       <main className="sm:ml-20 pb-20 sm:pb-0 min-h-svh">
         <div className="max-w-lg mx-auto px-4 py-5 sm:py-6">
@@ -65,4 +85,18 @@ export default function App() {
       <BottomNav active={tab} onChange={setTab} />
     </div>
   )
+}
+
+export default function App() {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="min-h-svh bg-gray-50 flex items-center justify-center">
+        <div className="text-2xl animate-pulse">💰</div>
+      </div>
+    )
+  }
+
+  return user ? <AppShell /> : <LoginPage />
 }
