@@ -1,28 +1,34 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
-import type { GroupExpense, Category, Group } from '../../types'
+import type { DbGroup, DbGroupExpense } from '../../hooks/useSupabaseGroups'
+import type { Category } from '../../types'
 import { CATEGORIES } from '../../types'
 import { FCYToggle } from '../shared/FCYToggle'
 import { isoToday } from '../../lib/format'
 
 interface Props {
-  group: Group
-  onAdd: (expense: GroupExpense) => void
+  group: DbGroup
+  currentUserId: string
+  myName: string
+  onAdd: (expense: Omit<DbGroupExpense, 'id' | 'group_id' | 'created_at'>) => Promise<void>
   onClose: () => void
 }
 
-export function AddGroupExpenseModal({ group, onAdd, onClose }: Props) {
+export function AddGroupExpenseModal({ group, currentUserId, myName, onAdd, onClose }: Props) {
+  const memberNames = group.members.map(m => m.display_name)
+
   const [category, setCategory] = useState<Category>('Food')
   const [description, setDescription] = useState('')
   const [date, setDate] = useState(isoToday())
   const [amount, setAmount] = useState('')
   const [notes, setNotes] = useState('')
-  const [paidBy, setPaidBy] = useState(group.members[0])
-  const [splitWith, setSplitWith] = useState<string[]>(group.members)
+  const [paidBy, setPaidBy] = useState(myName)
+  const [splitWith, setSplitWith] = useState<string[]>(memberNames)
   const [isFCY, setIsFCY] = useState(false)
   const [fcyAmt, setFcyAmt] = useState('')
   const [fcyCur, setFcyCur] = useState('USD')
   const [fcyRate, setFcyRate] = useState('')
+  const [saving, setSaving] = useState(false)
 
   function toggleSplit(member: string) {
     setSplitWith(prev =>
@@ -30,9 +36,10 @@ export function AddGroupExpenseModal({ group, onAdd, onClose }: Props) {
     )
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (splitWith.length === 0) return
+    setSaving(true)
 
     let sgdAmount: number
     if (isFCY && fcyAmt && fcyRate) {
@@ -40,24 +47,22 @@ export function AddGroupExpenseModal({ group, onAdd, onClose }: Props) {
     } else {
       sgdAmount = parseFloat(amount)
     }
-    if (!sgdAmount || isNaN(sgdAmount) || sgdAmount <= 0) return
+    if (!sgdAmount || isNaN(sgdAmount) || sgdAmount <= 0) { setSaving(false); return }
 
-    const expense: GroupExpense = {
-      id: crypto.randomUUID(),
+    await onAdd({
+      paid_by_user_id: currentUserId,
+      paid_by_name: paidBy,
       category,
       date,
       description: description.trim() || category,
       notes: notes.trim() || undefined,
-      sgdAmount: parseFloat(sgdAmount.toFixed(4)),
-      isFCY,
-      fcyAmt: isFCY && fcyAmt ? parseFloat(fcyAmt) : undefined,
-      fcyCur: isFCY ? fcyCur : undefined,
-      fcyRate: isFCY && fcyRate ? parseFloat(fcyRate) : undefined,
-      paidBy,
-      splitWith,
-    }
-
-    onAdd(expense)
+      sgd_amount: parseFloat(sgdAmount.toFixed(4)),
+      is_fcy: isFCY,
+      fcy_amt: isFCY && fcyAmt ? parseFloat(fcyAmt) : undefined,
+      fcy_cur: isFCY ? fcyCur : undefined,
+      fcy_rate: isFCY && fcyRate ? parseFloat(fcyRate) : undefined,
+      split_with: splitWith,
+    })
     onClose()
   }
 
@@ -101,7 +106,7 @@ export function AddGroupExpenseModal({ group, onAdd, onClose }: Props) {
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="e.g. Dinner at Shibuya"
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#185FA5]"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#2B8EEE]"
             />
           </div>
           <div>
@@ -111,7 +116,7 @@ export function AddGroupExpenseModal({ group, onAdd, onClose }: Props) {
               value={date}
               onChange={e => setDate(e.target.value)}
               required
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#185FA5]"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#2B8EEE]"
             />
           </div>
 
@@ -119,13 +124,13 @@ export function AddGroupExpenseModal({ group, onAdd, onClose }: Props) {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Paid by</label>
             <div className="flex flex-wrap gap-2">
-              {group.members.map(m => (
+              {memberNames.map(m => (
                 <button
                   key={m}
                   type="button"
                   onClick={() => setPaidBy(m)}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    paidBy === m ? 'bg-[#185FA5] text-white' : 'bg-gray-100 text-gray-600'
+                    paidBy === m ? 'bg-[#2B8EEE] text-white' : 'bg-gray-100 text-gray-600'
                   }`}
                 >
                   {m}
@@ -138,13 +143,13 @@ export function AddGroupExpenseModal({ group, onAdd, onClose }: Props) {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Split with</label>
             <div className="flex flex-wrap gap-2">
-              {group.members.map(m => (
+              {memberNames.map(m => (
                 <button
                   key={m}
                   type="button"
                   onClick={() => toggleSplit(m)}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    splitWith.includes(m) ? 'bg-[#1D9E75] text-white' : 'bg-gray-100 text-gray-600'
+                    splitWith.includes(m) ? 'bg-[#2DC64A] text-white' : 'bg-gray-100 text-gray-600'
                   }`}
                 >
                   {m}
@@ -181,7 +186,7 @@ export function AddGroupExpenseModal({ group, onAdd, onClose }: Props) {
                   required
                   min="0"
                   step="0.01"
-                  className="w-full border border-gray-200 rounded-xl pl-8 pr-3 py-2.5 text-sm focus:outline-none focus:border-[#185FA5]"
+                  className="w-full border border-gray-200 rounded-xl pl-8 pr-3 py-2.5 text-sm focus:outline-none focus:border-[#2B8EEE]"
                 />
               </div>
             </div>
@@ -194,16 +199,16 @@ export function AddGroupExpenseModal({ group, onAdd, onClose }: Props) {
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="Any extra details..."
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#185FA5]"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#2B8EEE]"
             />
           </div>
 
           <button
             type="submit"
-            disabled={splitWith.length === 0}
-            className="w-full bg-[#185FA5] text-white rounded-xl py-3 font-semibold text-sm hover:bg-[#185FA5]/90 transition-colors disabled:opacity-50"
+            disabled={splitWith.length === 0 || saving}
+            className="w-full bg-[#2B8EEE] text-white rounded-xl py-3 font-semibold text-sm hover:bg-[#1d7fd8] transition-colors disabled:opacity-50"
           >
-            Add Expense
+            {saving ? 'Saving…' : 'Add Expense'}
           </button>
         </form>
       </div>

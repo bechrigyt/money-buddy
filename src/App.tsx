@@ -5,10 +5,11 @@ import { PersonalTab } from './pages/PersonalTab'
 import { ChartsTab } from './pages/ChartsTab'
 import { GroupTab } from './pages/GroupTab'
 import { LoginPage } from './pages/LoginPage'
+import { JoinGroupModal } from './components/group/JoinGroupModal'
 import { useAuth } from './contexts/AuthContext'
 import { useExpenses } from './hooks/useExpenses'
 import { useBudget } from './hooks/useBudget'
-import { useGroups } from './hooks/useGroups'
+import { useSupabaseGroups } from './hooks/useSupabaseGroups'
 import { monthKey } from './lib/format'
 import { setStorageUser, storage } from './lib/storage'
 import { LogOut } from 'lucide-react'
@@ -20,25 +21,46 @@ function AppShell() {
   const { user, signOut } = useAuth()
   const [currentMonth, setCurrentMonth] = useState(monthKey())
   const [defaultTab, setDefaultTab] = useState<'personal' | 'group'>('personal')
+  const [tab, setTab] = useState<Tab>('personal')
+
+  // Detect ?join=TOKEN in URL
+  const [joinToken, setJoinToken] = useState<string | null>(() => {
+    const p = new URLSearchParams(window.location.search)
+    return p.get('join')
+  })
+  const [joinedGroupId, setJoinedGroupId] = useState<string | null>(null)
 
   // Point storage at this user's namespace, then read their default tab
   useEffect(() => {
     if (user) {
       setStorageUser(user.id)
-      setDefaultTab(storage.getDefaultTab())
+      const saved = storage.getDefaultTab()
+      setDefaultTab(saved)
+      setTab(saved)
     }
   }, [user?.id])
 
-  const [tab, setTab] = useState<Tab>(() => storage.getDefaultTab())
-
   const { expenses, addExpense, deleteExpense } = useExpenses()
   const { getBudget, setBudget } = useBudget()
-  const { groups, addGroup, deleteGroup, addGroupExpense, deleteGroupExpense } = useGroups()
+  const {
+    groups, loading: groupsLoading,
+    createGroup, getInviteToken, joinGroup,
+    deleteGroup, addExpense: addGroupExpense,
+    deleteExpense: deleteGroupExpense,
+  } = useSupabaseGroups(user?.id)
 
   const monthExpenses = expenses.filter(e => {
     const [y, m] = e.date.split('-')
     return `${y}-${parseInt(m)}` === currentMonth
   })
+
+  function handleJoined(groupId: string) {
+    setJoinToken(null)
+    setJoinedGroupId(groupId)
+    setTab('group')
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname)
+  }
 
   return (
     <div className="min-h-svh bg-gray-50">
@@ -49,7 +71,7 @@ function AppShell() {
         onChangeDefaultTab={(t) => { setDefaultTab(t); setTab(t) }}
       />
 
-      {/* Sign-out button — top right */}
+      {/* Sign-out button */}
       <button
         onClick={signOut}
         title="Sign out"
@@ -84,16 +106,34 @@ function AppShell() {
           {tab === 'group' && (
             <GroupTab
               groups={groups}
-              onAddGroup={addGroup}
+              loading={groupsLoading}
+              currentUserId={user!.id}
+              onCreateGroup={createGroup}
               onDeleteGroup={deleteGroup}
-              onAddGroupExpense={addGroupExpense}
-              onDeleteGroupExpense={deleteGroupExpense}
+              onAddExpense={addGroupExpense}
+              onDeleteExpense={deleteGroupExpense}
+              onGetInviteToken={getInviteToken}
+              initialGroupId={joinedGroupId}
             />
           )}
         </div>
       </main>
 
       <BottomNav active={tab} onChange={setTab} />
+
+      {/* Join group modal — shown when ?join=TOKEN is in URL */}
+      {joinToken && user && (
+        <JoinGroupModal
+          token={joinToken}
+          userId={user.id}
+          onJoin={joinGroup}
+          onJoined={handleJoined}
+          onClose={() => {
+            setJoinToken(null)
+            window.history.replaceState({}, '', window.location.pathname)
+          }}
+        />
+      )}
     </div>
   )
 }
