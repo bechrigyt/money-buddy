@@ -37,8 +37,8 @@ export function PersonalTab({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <h1 className="text-xl font-bold text-[#2C2C2A]">Money</h1>
-          <h1 className="text-xl font-bold text-[#185FA5]">Buddy</h1>
+          <h1 style={{ fontFamily: "'Poppins', sans-serif" }} className="text-xl font-bold text-[#1F2229]">Money</h1>
+          <h1 style={{ fontFamily: "'Poppins', sans-serif" }} className="text-xl font-bold text-[#2B8EEE]">Buddy</h1>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -49,7 +49,7 @@ export function PersonalTab({
           </button>
           <button
             onClick={() => setShowAdd(true)}
-            className="flex items-center gap-1.5 bg-[#1D9E75] text-white px-3 py-2 rounded-xl text-sm font-semibold"
+            className="flex items-center gap-1.5 bg-[#2DC64A] text-white px-3 py-2 rounded-xl text-sm font-semibold"
           >
             <Plus size={16} /> Add
           </button>
