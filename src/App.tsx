@@ -19,6 +19,14 @@ type Tab = 'personal' | 'charts' | 'group'
 
 function AppShell() {
   const { user, signOut } = useAuth()
+
+  // Derive a friendly first name: Google full name → first word, else email prefix
+  const userName = (() => {
+    const full = user?.user_metadata?.full_name || user?.user_metadata?.name
+    if (full) return (full as string).split(' ')[0]
+    const email = user?.email ?? ''
+    return email.split('@')[0]
+  })()
   const [currentMonth, setCurrentMonth] = useState(monthKey())
   const [defaultTab, setDefaultTab] = useState<'personal' | 'group'>('personal')
   const [tab, setTab] = useState<Tab>('personal')
@@ -92,6 +100,7 @@ function AppShell() {
               onSetBudget={amt => setBudget(currentMonth, amt)}
               onAddExpense={addExpense}
               onDeleteExpense={deleteExpense}
+              userName={userName}
             />
           )}
           {tab === 'charts' && (

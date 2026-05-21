@@ -15,6 +15,7 @@ interface Props {
   onSetBudget: (amt: number) => void
   onAddExpense: (e: Expense) => void
   onDeleteExpense: (id: string) => void
+  userName?: string
 }
 
 export function PersonalTab({
@@ -25,6 +26,7 @@ export function PersonalTab({
   onSetBudget,
   onAddExpense,
   onDeleteExpense,
+  userName,
 }: Props) {
   const [showAdd, setShowAdd] = useState(false)
   const [showExport, setShowExport] = useState(false)
@@ -36,9 +38,13 @@ export function PersonalTab({
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1">
-          <h1 style={{ fontFamily: "'Poppins', sans-serif" }} className="text-xl font-bold text-[#1F2229]">Money</h1>
-          <h1 style={{ fontFamily: "'Poppins', sans-serif" }} className="text-xl font-bold text-[#2B8EEE]">Buddy</h1>
+        <div className="flex flex-col gap-0.5">
+          <p className="text-sm text-gray-400">
+            Welcome to&nbsp;
+            <span style={{ fontFamily: "'Poppins', sans-serif" }} className="font-bold text-[#1F2229]">Money </span>
+            <span style={{ fontFamily: "'Poppins', sans-serif" }} className="font-bold text-[#2B8EEE]">Buddy</span>
+            {userName && <span className="font-normal text-gray-400">, {userName}</span>}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <button
