@@ -48,12 +48,13 @@ function AppShell() {
     }
   }, [user?.id])
 
-  const { expenses, addExpense, deleteExpense } = useExpenses()
+  const { expenses, addExpense, updateExpense, deleteExpense } = useExpenses()
   const { getBudget, setBudget } = useBudget()
   const {
     groups, loading: groupsLoading,
     createGroup, getInviteToken, joinGroup,
     deleteGroup, addExpense: addGroupExpense,
+    updateExpense: updateGroupExpense,
     deleteExpense: deleteGroupExpense,
   } = useSupabaseGroups(user?.id)
 
@@ -99,6 +100,7 @@ function AppShell() {
               budget={getBudget(currentMonth)}
               onSetBudget={amt => setBudget(currentMonth, amt)}
               onAddExpense={addExpense}
+              onUpdateExpense={updateExpense}
               onDeleteExpense={deleteExpense}
               userName={userName}
             />
@@ -120,6 +122,7 @@ function AppShell() {
               onCreateGroup={createGroup}
               onDeleteGroup={deleteGroup}
               onAddExpense={addGroupExpense}
+              onUpdateExpense={updateGroupExpense}
               onDeleteExpense={deleteGroupExpense}
               onGetInviteToken={getInviteToken}
               initialGroupId={joinedGroupId}
