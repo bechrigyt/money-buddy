@@ -16,6 +16,14 @@ interface Props {
   onGetInviteToken: (groupId: string) => Promise<string | null>
 }
 
+/** Format a foreign-currency amount with appropriate decimal places */
+function fmtFcy(amt: number, cur: string): string {
+  const noDecimals = ['JPY', 'KRW', 'IDR', 'VND']
+  return noDecimals.includes(cur)
+    ? Math.round(amt).toLocaleString('en-SG')
+    : amt.toLocaleString('en-SG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 export function GroupDetail({ group, currentUserId, onBack, onAddExpense, onDeleteExpense, onGetInviteToken }: Props) {
   const [showAdd, setShowAdd] = useState(false)
   const [showSettle, setShowSettle] = useState(false)
@@ -149,7 +157,12 @@ export function GroupDetail({ group, currentUserId, onBack, onAddExpense, onDele
                     <p className="text-xs text-gray-400">Split: {expense.split_with.join(', ')}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-900">{fmt(expense.sgd_amount)}</span>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-gray-900">{fmt(expense.sgd_amount)}</p>
+                      {expense.is_fcy && expense.fcy_amt != null && expense.fcy_cur && (
+                        <p className="text-xs text-gray-400">{expense.fcy_cur} {fmtFcy(expense.fcy_amt, expense.fcy_cur)}</p>
+                      )}
+                    </div>
                     {canDelete && (
                       <button
                         onClick={() => handleDelete(expense.id)}

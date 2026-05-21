@@ -4,6 +4,14 @@ import type { Expense, Category } from '../../types'
 import { CATEGORIES, getCategoryMeta } from '../../types'
 import { fmt, formatDateDisplay } from '../../lib/format'
 
+/** Format a foreign-currency amount with appropriate decimal places */
+function fmtFcy(amt: number, cur: string): string {
+  const noDecimals = ['JPY', 'KRW', 'IDR', 'VND']
+  return noDecimals.includes(cur)
+    ? Math.round(amt).toLocaleString('en-SG')
+    : amt.toLocaleString('en-SG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 interface Props {
   expenses: Expense[]
   onDelete: (id: string) => void
@@ -71,16 +79,18 @@ export function ExpenseList({ expenses, onDelete }: Props) {
                   <p className="text-sm font-medium text-gray-900 truncate">{expense.description}</p>
                   <p className="text-xs text-gray-400">
                     {formatDateDisplay(expense.date)} · {expense.category}
-                    {expense.isFCY && expense.fcyAmt && expense.fcyCur && (
-                      <span className="text-[#185FA5]"> · {expense.fcyCur} {expense.fcyAmt.toFixed(2)}</span>
-                    )}
                   </p>
                   {expense.notes && (
                     <p className="text-xs text-gray-400 truncate">{expense.notes}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-900">{fmt(expense.sgdAmount)}</span>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-gray-900">{fmt(expense.sgdAmount)}</p>
+                    {expense.isFCY && expense.fcyAmt != null && expense.fcyCur && (
+                      <p className="text-xs text-gray-400">{expense.fcyCur} {fmtFcy(expense.fcyAmt, expense.fcyCur)}</p>
+                    )}
+                  </div>
                   <button
                     onClick={() => handleDelete(expense.id)}
                     className={`p-1.5 rounded-lg transition-colors ${
