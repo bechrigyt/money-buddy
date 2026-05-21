@@ -12,22 +12,24 @@ interface Props {
   myName: string
   onAdd: (expense: Omit<DbGroupExpense, 'id' | 'group_id' | 'created_at'>) => Promise<void>
   onClose: () => void
+  initialExpense?: DbGroupExpense
 }
 
-export function AddGroupExpenseModal({ group, currentUserId, myName, onAdd, onClose }: Props) {
+export function AddGroupExpenseModal({ group, currentUserId, myName, onAdd, onClose, initialExpense }: Props) {
+  const isEdit = !!initialExpense
   const memberNames = group.members.map(m => m.display_name)
 
-  const [category, setCategory] = useState<Category>('Food')
-  const [description, setDescription] = useState('')
-  const [date, setDate] = useState(isoToday())
-  const [amount, setAmount] = useState('')
-  const [notes, setNotes] = useState('')
-  const [paidBy, setPaidBy] = useState(myName)
-  const [splitWith, setSplitWith] = useState<string[]>(memberNames)
-  const [isFCY, setIsFCY] = useState(false)
-  const [fcyAmt, setFcyAmt] = useState('')
-  const [fcyCur, setFcyCur] = useState('USD')
-  const [fcyRate, setFcyRate] = useState('')
+  const [category, setCategory] = useState<Category>(initialExpense?.category ?? 'Food')
+  const [description, setDescription] = useState(initialExpense?.description ?? '')
+  const [date, setDate] = useState(initialExpense?.date ?? isoToday())
+  const [amount, setAmount] = useState(initialExpense && !initialExpense.is_fcy ? String(initialExpense.sgd_amount) : '')
+  const [notes, setNotes] = useState(initialExpense?.notes ?? '')
+  const [paidBy, setPaidBy] = useState(initialExpense?.paid_by_name ?? myName)
+  const [splitWith, setSplitWith] = useState<string[]>(initialExpense?.split_with ?? memberNames)
+  const [isFCY, setIsFCY] = useState(initialExpense?.is_fcy ?? false)
+  const [fcyAmt, setFcyAmt] = useState(initialExpense?.fcy_amt != null ? String(initialExpense.fcy_amt) : '')
+  const [fcyCur, setFcyCur] = useState(initialExpense?.fcy_cur ?? 'USD')
+  const [fcyRate, setFcyRate] = useState(initialExpense?.fcy_rate != null ? String(initialExpense.fcy_rate) : '')
   const [saving, setSaving] = useState(false)
 
   function toggleSplit(member: string) {
@@ -50,7 +52,7 @@ export function AddGroupExpenseModal({ group, currentUserId, myName, onAdd, onCl
     if (!sgdAmount || isNaN(sgdAmount) || sgdAmount <= 0) { setSaving(false); return }
 
     await onAdd({
-      paid_by_user_id: currentUserId,
+      paid_by_user_id: initialExpense?.paid_by_user_id ?? currentUserId,
       paid_by_name: paidBy,
       category,
       date,
@@ -70,7 +72,7 @@ export function AddGroupExpenseModal({ group, currentUserId, myName, onAdd, onCl
     <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl w-full max-w-[420px] max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900">Add Group Expense</h2>
+          <h2 className="font-semibold text-gray-900">{isEdit ? 'Edit Expense' : 'Add Group Expense'}</h2>
           <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
             <X size={20} />
           </button>
@@ -208,7 +210,7 @@ export function AddGroupExpenseModal({ group, currentUserId, myName, onAdd, onCl
             disabled={splitWith.length === 0 || saving}
             className="w-full bg-[#2B8EEE] text-white rounded-xl py-3 font-semibold text-sm hover:bg-[#1d7fd8] transition-colors disabled:opacity-50"
           >
-            {saving ? 'Saving…' : 'Add Expense'}
+            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Expense'}
           </button>
         </form>
       </div>

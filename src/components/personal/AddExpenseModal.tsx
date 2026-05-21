@@ -8,18 +8,20 @@ import { isoToday } from '../../lib/format'
 interface Props {
   onAdd: (expense: Expense) => void
   onClose: () => void
+  initialExpense?: Expense
 }
 
-export function AddExpenseModal({ onAdd, onClose }: Props) {
-  const [category, setCategory] = useState<Category>('Food')
-  const [description, setDescription] = useState('')
-  const [date, setDate] = useState(isoToday())
-  const [amount, setAmount] = useState('')
-  const [notes, setNotes] = useState('')
-  const [isFCY, setIsFCY] = useState(false)
-  const [fcyAmt, setFcyAmt] = useState('')
-  const [fcyCur, setFcyCur] = useState('USD')
-  const [fcyRate, setFcyRate] = useState('')
+export function AddExpenseModal({ onAdd, onClose, initialExpense }: Props) {
+  const isEdit = !!initialExpense
+  const [category, setCategory] = useState<Category>(initialExpense?.category ?? 'Food')
+  const [description, setDescription] = useState(initialExpense?.description ?? '')
+  const [date, setDate] = useState(initialExpense?.date ?? isoToday())
+  const [amount, setAmount] = useState(initialExpense && !initialExpense.isFCY ? String(initialExpense.sgdAmount) : '')
+  const [notes, setNotes] = useState(initialExpense?.notes ?? '')
+  const [isFCY, setIsFCY] = useState(initialExpense?.isFCY ?? false)
+  const [fcyAmt, setFcyAmt] = useState(initialExpense?.fcyAmt != null ? String(initialExpense.fcyAmt) : '')
+  const [fcyCur, setFcyCur] = useState(initialExpense?.fcyCur ?? 'USD')
+  const [fcyRate, setFcyRate] = useState(initialExpense?.fcyRate != null ? String(initialExpense.fcyRate) : '')
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -34,7 +36,7 @@ export function AddExpenseModal({ onAdd, onClose }: Props) {
     if (!sgdAmount || isNaN(sgdAmount) || sgdAmount <= 0) return
 
     const expense: Expense = {
-      id: crypto.randomUUID(),
+      id: initialExpense?.id ?? crypto.randomUUID(),
       category,
       date,
       description: description.trim() || category,
@@ -54,7 +56,7 @@ export function AddExpenseModal({ onAdd, onClose }: Props) {
     <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl w-full max-w-[420px] max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900">Add Expense</h2>
+          <h2 className="font-semibold text-gray-900">{isEdit ? 'Edit Expense' : 'Add Expense'}</h2>
           <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
             <X size={20} />
           </button>
@@ -156,7 +158,7 @@ export function AddExpenseModal({ onAdd, onClose }: Props) {
             type="submit"
             className="w-full bg-[#1D9E75] text-white rounded-xl py-3 font-semibold text-sm hover:bg-[#179062] transition-colors mt-2"
           >
-            Add Expense
+            {isEdit ? 'Save Changes' : 'Add Expense'}
           </button>
         </form>
       </div>

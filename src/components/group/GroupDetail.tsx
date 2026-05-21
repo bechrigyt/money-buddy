@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeft, Plus, Scale, Download, Trash2, Link, Check } from 'lucide-react'
+import { ArrowLeft, Plus, Scale, Download, Trash2, Pencil, Link, Check } from 'lucide-react'
 import type { DbGroup, DbGroupExpense } from '../../hooks/useSupabaseGroups'
 import { getCategoryMeta } from '../../types'
 import { fmt, formatDateDisplay } from '../../lib/format'
@@ -12,6 +12,7 @@ interface Props {
   currentUserId: string
   onBack: () => void
   onAddExpense: (groupId: string, expense: Omit<DbGroupExpense, 'id' | 'group_id' | 'created_at'>) => Promise<void>
+  onUpdateExpense: (expenseId: string, updates: Omit<DbGroupExpense, 'id' | 'group_id' | 'created_at'>) => Promise<void>
   onDeleteExpense: (expenseId: string) => Promise<void>
   onGetInviteToken: (groupId: string) => Promise<string | null>
 }
@@ -24,11 +25,12 @@ function fmtFcy(amt: number, cur: string): string {
     : amt.toLocaleString('en-SG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-export function GroupDetail({ group, currentUserId, onBack, onAddExpense, onDeleteExpense, onGetInviteToken }: Props) {
+export function GroupDetail({ group, currentUserId, onBack, onAddExpense, onUpdateExpense, onDeleteExpense, onGetInviteToken }: Props) {
   const [showAdd, setShowAdd] = useState(false)
   const [showSettle, setShowSettle] = useState(false)
   const [showExport, setShowExport] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [editingExpense, setEditingExpense] = useState<DbGroupExpense | null>(null)
   const [copied, setCopied] = useState(false)
 
   const sorted = [...group.expenses].sort((a, b) => b.date.localeCompare(a.date))
@@ -156,7 +158,7 @@ export function GroupDetail({ group, currentUserId, onBack, onAddExpense, onDele
                     </p>
                     <p className="text-xs text-gray-400">Split: {expense.split_with.join(', ')}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <div className="text-right">
                       <p className="text-sm font-semibold text-gray-900">{fmt(expense.sgd_amount)}</p>
                       {expense.is_fcy && expense.fcy_amt != null && expense.fcy_cur && (
@@ -164,14 +166,22 @@ export function GroupDetail({ group, currentUserId, onBack, onAddExpense, onDele
                       )}
                     </div>
                     {canDelete && (
-                      <button
-                        onClick={() => handleDelete(expense.id)}
-                        className={`p-1.5 rounded-lg transition-colors ${
-                          confirmDelete === expense.id ? 'bg-red-500 text-white' : 'text-gray-300 hover:text-red-400'
-                        }`}
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setEditingExpense(expense)}
+                          className="p-1.5 rounded-lg text-gray-300 hover:text-[#2B8EEE] transition-colors"
+                        >
+                          <Pencil size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(expense.id)}
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            confirmDelete === expense.id ? 'bg-red-500 text-white' : 'text-gray-300 hover:text-red-400'
+                          }`}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </>
                     )}
                   </div>
                 </li>
@@ -188,6 +198,16 @@ export function GroupDetail({ group, currentUserId, onBack, onAddExpense, onDele
           myName={myName}
           onAdd={expense => onAddExpense(group.id, expense)}
           onClose={() => setShowAdd(false)}
+        />
+      )}
+      {editingExpense && (
+        <AddGroupExpenseModal
+          group={group}
+          currentUserId={currentUserId}
+          myName={myName}
+          initialExpense={editingExpense}
+          onAdd={updates => onUpdateExpense(editingExpense.id, updates)}
+          onClose={() => setEditingExpense(null)}
         />
       )}
       {showSettle && <SettleUpModal group={legacyGroup} onClose={() => setShowSettle(false)} />}

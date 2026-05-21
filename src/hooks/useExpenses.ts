@@ -13,6 +13,14 @@ export function useExpenses() {
     })
   }, [])
 
+  const updateExpense = useCallback((id: string, updated: Expense) => {
+    setExpenses(prev => {
+      const next = prev.map(e => e.id === id ? updated : e)
+      storage.saveExpenses(next)
+      return next
+    })
+  }, [])
+
   const deleteExpense = useCallback((id: string) => {
     setExpenses(prev => {
       const next = prev.filter(e => e.id !== id)
@@ -21,5 +29,5 @@ export function useExpenses() {
     })
   }, [])
 
-  return { expenses, addExpense, deleteExpense }
+  return { expenses, addExpense, updateExpense, deleteExpense }
 }

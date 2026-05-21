@@ -169,11 +169,17 @@ export function useSupabaseGroups(userId: string | undefined) {
     await fetchGroups()
   }, [fetchGroups])
 
+  // Update expense
+  const updateExpense = useCallback(async (expenseId: string, updates: Omit<DbGroupExpense, 'id' | 'group_id' | 'created_at'>) => {
+    await supabase.from('group_expenses').update(updates).eq('id', expenseId)
+    await fetchGroups()
+  }, [fetchGroups])
+
   // Delete expense
   const deleteExpense = useCallback(async (expenseId: string) => {
     await supabase.from('group_expenses').delete().eq('id', expenseId)
     await fetchGroups()
   }, [fetchGroups])
 
-  return { groups, loading, createGroup, getInviteToken, joinGroup, deleteGroup, addExpense, deleteExpense, refetch: fetchGroups }
+  return { groups, loading, createGroup, getInviteToken, joinGroup, deleteGroup, addExpense, updateExpense, deleteExpense, refetch: fetchGroups }
 }

@@ -10,6 +10,7 @@ interface Props {
   onCreateGroup: (name: string, displayName: string) => Promise<{ groupId: string; token: string | null } | null>
   onDeleteGroup: (id: string) => void
   onAddExpense: (groupId: string, expense: Omit<DbGroupExpense, 'id' | 'group_id' | 'created_at'>) => Promise<void>
+  onUpdateExpense: (expenseId: string, updates: Omit<DbGroupExpense, 'id' | 'group_id' | 'created_at'>) => Promise<void>
   onDeleteExpense: (expenseId: string) => Promise<void>
   onGetInviteToken: (groupId: string) => Promise<string | null>
   initialGroupId?: string | null
@@ -18,7 +19,7 @@ interface Props {
 export function GroupTab({
   groups, loading, currentUserId,
   onCreateGroup, onDeleteGroup,
-  onAddExpense, onDeleteExpense,
+  onAddExpense, onUpdateExpense, onDeleteExpense,
   onGetInviteToken, initialGroupId,
 }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(initialGroupId ?? null)
@@ -32,6 +33,7 @@ export function GroupTab({
         currentUserId={currentUserId}
         onBack={() => setSelectedId(null)}
         onAddExpense={onAddExpense}
+        onUpdateExpense={onUpdateExpense}
         onDeleteExpense={onDeleteExpense}
         onGetInviteToken={onGetInviteToken}
       />

@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Pencil } from 'lucide-react'
 import type { Expense, Category } from '../../types'
 import { CATEGORIES, getCategoryMeta } from '../../types'
 import { fmt, formatDateDisplay } from '../../lib/format'
+import { AddExpenseModal } from './AddExpenseModal'
 
 /** Format a foreign-currency amount with appropriate decimal places */
 function fmtFcy(amt: number, cur: string): string {
@@ -15,11 +16,13 @@ function fmtFcy(amt: number, cur: string): string {
 interface Props {
   expenses: Expense[]
   onDelete: (id: string) => void
+  onEdit: (expense: Expense) => void
 }
 
-export function ExpenseList({ expenses, onDelete }: Props) {
+export function ExpenseList({ expenses, onDelete, onEdit }: Props) {
   const [filter, setFilter] = useState<Category | 'All'>('All')
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
 
   const filtered = filter === 'All' ? expenses : expenses.filter(e => e.category === filter)
   const sorted = [...filtered].sort((a, b) => b.date.localeCompare(a.date))
@@ -84,13 +87,19 @@ export function ExpenseList({ expenses, onDelete }: Props) {
                     <p className="text-xs text-gray-400 truncate">{expense.notes}</p>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <div className="text-right">
                     <p className="text-sm font-semibold text-gray-900">{fmt(expense.sgdAmount)}</p>
                     {expense.isFCY && expense.fcyAmt != null && expense.fcyCur && (
                       <p className="text-xs text-gray-400">{expense.fcyCur} {fmtFcy(expense.fcyAmt, expense.fcyCur)}</p>
                     )}
                   </div>
+                  <button
+                    onClick={() => setEditingExpense(expense)}
+                    className="p-1.5 rounded-lg text-gray-300 hover:text-[#2B8EEE] transition-colors"
+                  >
+                    <Pencil size={13} />
+                  </button>
                   <button
                     onClick={() => handleDelete(expense.id)}
                     className={`p-1.5 rounded-lg transition-colors ${
@@ -106,6 +115,13 @@ export function ExpenseList({ expenses, onDelete }: Props) {
             )
           })}
         </ul>
+      )}
+      {editingExpense && (
+        <AddExpenseModal
+          initialExpense={editingExpense}
+          onAdd={updated => { onEdit(updated); setEditingExpense(null) }}
+          onClose={() => setEditingExpense(null)}
+        />
       )}
     </div>
   )

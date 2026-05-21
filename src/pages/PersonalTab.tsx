@@ -14,6 +14,7 @@ interface Props {
   budget: number
   onSetBudget: (amt: number) => void
   onAddExpense: (e: Expense) => void
+  onUpdateExpense: (id: string, e: Expense) => void
   onDeleteExpense: (id: string) => void
   userName?: string
 }
@@ -25,6 +26,7 @@ export function PersonalTab({
   budget,
   onSetBudget,
   onAddExpense,
+  onUpdateExpense,
   onDeleteExpense,
   userName,
 }: Props) {
@@ -87,7 +89,7 @@ export function PersonalTab({
         onSetBudget={onSetBudget}
       />
 
-      <ExpenseList expenses={monthExpenses} onDelete={onDeleteExpense} />
+      <ExpenseList expenses={monthExpenses} onDelete={onDeleteExpense} onEdit={onUpdateExpense} />
 
       {showAdd && (
         <AddExpenseModal onAdd={onAddExpense} onClose={() => setShowAdd(false)} />
