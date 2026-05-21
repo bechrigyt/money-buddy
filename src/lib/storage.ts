@@ -36,4 +36,11 @@ export const storage = {
 
   getGroups: (): Group[] => load().groups,
   saveGroups: (groups: Group[]) => save({ ...load(), groups }),
+
+  getDefaultTab: (): 'personal' | 'group' => {
+    return (localStorage.getItem(`sb-prefs-${_userId}-defaultTab`) ?? 'personal') as 'personal' | 'group'
+  },
+  saveDefaultTab: (tab: 'personal' | 'group') => {
+    localStorage.setItem(`sb-prefs-${_userId}-defaultTab`, tab)
+  },
 }

@@ -10,7 +10,7 @@ import { useExpenses } from './hooks/useExpenses'
 import { useBudget } from './hooks/useBudget'
 import { useGroups } from './hooks/useGroups'
 import { monthKey } from './lib/format'
-import { setStorageUser } from './lib/storage'
+import { setStorageUser, storage } from './lib/storage'
 import { LogOut } from 'lucide-react'
 import { LogoMark } from './components/shared/LogoMark'
 
@@ -18,13 +18,18 @@ type Tab = 'personal' | 'charts' | 'group'
 
 function AppShell() {
   const { user, signOut } = useAuth()
-  const [tab, setTab] = useState<Tab>('personal')
   const [currentMonth, setCurrentMonth] = useState(monthKey())
+  const [defaultTab, setDefaultTab] = useState<'personal' | 'group'>('personal')
 
-  // Point storage at this user's namespace
+  // Point storage at this user's namespace, then read their default tab
   useEffect(() => {
-    if (user) setStorageUser(user.id)
+    if (user) {
+      setStorageUser(user.id)
+      setDefaultTab(storage.getDefaultTab())
+    }
   }, [user?.id])
+
+  const [tab, setTab] = useState<Tab>(() => storage.getDefaultTab())
 
   const { expenses, addExpense, deleteExpense } = useExpenses()
   const { getBudget, setBudget } = useBudget()
@@ -37,7 +42,12 @@ function AppShell() {
 
   return (
     <div className="min-h-svh bg-gray-50">
-      <Sidebar active={tab} onChange={setTab} />
+      <Sidebar
+        active={tab}
+        onChange={setTab}
+        defaultTab={defaultTab}
+        onChangeDefaultTab={(t) => { setDefaultTab(t); setTab(t) }}
+      />
 
       {/* Sign-out button — top right */}
       <button
