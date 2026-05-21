@@ -13,6 +13,8 @@ import { useSupabaseGroups } from './hooks/useSupabaseGroups'
 import { useLocalGroups } from './hooks/useLocalGroups'
 import { monthKey } from './lib/format'
 import { setStorageUser, storage } from './lib/storage'
+import { setActivityUser } from './lib/activityTracker'
+import { useActivityTracker } from './hooks/useActivityTracker'
 import { LogOut } from 'lucide-react'
 import { LogoMark } from './components/shared/LogoMark'
 
@@ -43,11 +45,14 @@ function AppShell() {
   useEffect(() => {
     if (user) {
       setStorageUser(user.id)
+      setActivityUser(user.id)
       const saved = storage.getDefaultTab()
       setDefaultTab(saved)
       setTab(saved)
     }
   }, [user?.id])
+
+  const activityStats = useActivityTracker()
 
   const { expenses, addExpense, updateExpense, deleteExpense } = useExpenses()
   const { getBudget, setBudget } = useBudget()
@@ -87,6 +92,7 @@ function AppShell() {
         onChange={setTab}
         defaultTab={defaultTab}
         onChangeDefaultTab={(t) => { setDefaultTab(t); setTab(t) }}
+        activityStats={activityStats}
       />
 
       {/* Sign-out button */}

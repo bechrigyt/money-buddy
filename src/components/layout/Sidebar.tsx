@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Wallet, BarChart2, Users, Settings } from 'lucide-react'
 import { LogoMark } from '../shared/LogoMark'
 import { SettingsPanel } from '../shared/SettingsPanel'
+import type { ActivityStats } from '../../lib/activityTracker'
 
 type Tab = 'personal' | 'charts' | 'group'
 
@@ -10,6 +11,7 @@ interface Props {
   onChange: (tab: Tab) => void
   defaultTab: 'personal' | 'group'
   onChangeDefaultTab: (tab: 'personal' | 'group') => void
+  activityStats: ActivityStats
 }
 
 const TABS = [
@@ -18,7 +20,7 @@ const TABS = [
   { id: 'group'    as Tab, label: 'Groups',   Icon: Users },
 ]
 
-export function Sidebar({ active, onChange, defaultTab, onChangeDefaultTab }: Props) {
+export function Sidebar({ active, onChange, defaultTab, onChangeDefaultTab, activityStats }: Props) {
   const [showSettings, setShowSettings] = useState(false)
 
   return (
@@ -64,6 +66,7 @@ export function Sidebar({ active, onChange, defaultTab, onChangeDefaultTab }: Pr
           <SettingsPanel
             defaultTab={defaultTab}
             onChangeDefaultTab={onChangeDefaultTab}
+            activityStats={activityStats}
             onClose={() => setShowSettings(false)}
           />
         )}
