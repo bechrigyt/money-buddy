@@ -92,7 +92,7 @@ export function useSupabaseGroups(userId: string | undefined) {
       .insert({ name, created_by: userId })
       .select()
       .single()
-    if (error || !g) return null
+    if (error || !g) { console.error('createGroup error:', error); return null }
 
     await supabase.from('group_members').insert({
       group_id: g.id, user_id: userId, display_name: displayName,
