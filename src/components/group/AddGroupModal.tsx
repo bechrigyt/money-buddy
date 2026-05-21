@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { X, Copy, Check } from 'lucide-react'
 
 interface Props {
-  onAdd: (name: string, displayName: string) => Promise<string | null>
+  onAdd: (name: string, displayName: string) => Promise<{ groupId: string; token: string | null } | null>
   onClose: () => void
 }
 
@@ -18,11 +18,12 @@ export function AddGroupModal({ onAdd, onClose }: Props) {
     e.preventDefault()
     if (!name.trim() || !displayName.trim()) return
     setLoading(true)
-    const groupId = await onAdd(name.trim(), displayName.trim())
-    if (groupId) {
-      // Build invite link — token will be fetched by parent and passed back
-      // For now show a placeholder; GroupDetail will have the real share button
-      setInviteLink(`${window.location.origin}?join=loading`)
+    const result = await onAdd(name.trim(), displayName.trim())
+    if (result) {
+      const link = result.token
+        ? `${window.location.origin}?join=${result.token}`
+        : `${window.location.origin}?join=unavailable`
+      setInviteLink(link)
       setStep('invite')
     }
     setLoading(false)

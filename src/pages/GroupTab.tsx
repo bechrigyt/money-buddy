@@ -7,7 +7,7 @@ interface Props {
   groups: DbGroup[]
   loading: boolean
   currentUserId: string
-  onCreateGroup: (name: string, displayName: string) => Promise<string | null>
+  onCreateGroup: (name: string, displayName: string) => Promise<{ groupId: string; token: string | null } | null>
   onDeleteGroup: (id: string) => void
   onAddExpense: (groupId: string, expense: Omit<DbGroupExpense, 'id' | 'group_id' | 'created_at'>) => Promise<void>
   onDeleteExpense: (expenseId: string) => Promise<void>

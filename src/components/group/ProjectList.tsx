@@ -7,7 +7,7 @@ import { AddGroupModal } from './AddGroupModal'
 interface Props {
   groups: DbGroup[]
   loading: boolean
-  onAdd: (name: string, displayName: string) => Promise<string | null>
+  onAdd: (name: string, displayName: string) => Promise<{ groupId: string; token: string | null } | null>
   onDelete: (id: string) => void
   onSelect: (group: DbGroup) => void
 }

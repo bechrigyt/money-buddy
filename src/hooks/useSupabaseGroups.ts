@@ -103,10 +103,14 @@ export function useSupabaseGroups(userId: string | undefined) {
     if (memberError) { console.error('addMember error:', memberError); return null }
 
     // Create a permanent invite token
-    await supabase.from('group_invites').insert({ group_id: groupId, created_by: userId })
+    const { data: invite } = await supabase
+      .from('group_invites')
+      .insert({ group_id: groupId, created_by: userId })
+      .select('token')
+      .single()
 
     await fetchGroups()
-    return groupId
+    return { groupId, token: invite?.token ?? null }
   }, [userId, fetchGroups])
 
   // Get or create invite token for a group
