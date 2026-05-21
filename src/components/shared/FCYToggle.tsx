@@ -32,7 +32,7 @@ export function FCYToggle({ enabled, onToggle, fcyAmt, fcyCur, fcyRate, onFcyAmt
 
     try {
       const res = await fetch(
-        `https://api.frankfurter.app/latest?from=${currency}&to=SGD`,
+        `https://api.frankfurter.dev/v1/latest?from=${currency}&to=SGD`,
         { signal: ctrl.signal }
       )
       const data = await res.json()
