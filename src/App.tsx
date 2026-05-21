@@ -10,6 +10,7 @@ import { useAuth } from './contexts/AuthContext'
 import { useExpenses } from './hooks/useExpenses'
 import { useBudget } from './hooks/useBudget'
 import { useSupabaseGroups } from './hooks/useSupabaseGroups'
+import { useLocalGroups } from './hooks/useLocalGroups'
 import { monthKey } from './lib/format'
 import { setStorageUser, storage } from './lib/storage'
 import { LogOut } from 'lucide-react'
@@ -51,12 +52,20 @@ function AppShell() {
   const { expenses, addExpense, updateExpense, deleteExpense } = useExpenses()
   const { getBudget, setBudget } = useBudget()
   const {
-    groups, loading: groupsLoading,
+    groups: sharedGroups, loading: groupsLoading,
     createGroup, getInviteToken, joinGroup,
     deleteGroup, addExpense: addGroupExpense,
     updateExpense: updateGroupExpense,
     deleteExpense: deleteGroupExpense,
   } = useSupabaseGroups(user?.id)
+  const {
+    groups: localGroups,
+    createGroup: createLocalGroup,
+    deleteGroup: deleteLocalGroup,
+    addExpense: addLocalExpense,
+    updateExpense: updateLocalExpense,
+    deleteExpense: deleteLocalExpense,
+  } = useLocalGroups()
 
   const monthExpenses = expenses.filter(e => {
     const [y, m] = e.date.split('-')
@@ -116,16 +125,22 @@ function AppShell() {
           )}
           {tab === 'group' && (
             <GroupTab
-              groups={groups}
-              loading={groupsLoading}
+              sharedGroups={sharedGroups}
+              sharedLoading={groupsLoading}
               currentUserId={user!.id}
-              onCreateGroup={createGroup}
-              onDeleteGroup={deleteGroup}
-              onAddExpense={addGroupExpense}
-              onUpdateExpense={updateGroupExpense}
-              onDeleteExpense={deleteGroupExpense}
+              onCreateShared={createGroup}
+              onDeleteShared={deleteGroup}
+              onAddSharedExpense={addGroupExpense}
+              onUpdateSharedExpense={updateGroupExpense}
+              onDeleteSharedExpense={deleteGroupExpense}
               onGetInviteToken={getInviteToken}
-              initialGroupId={joinedGroupId}
+              initialSharedGroupId={joinedGroupId}
+              localGroups={localGroups}
+              onCreateLocal={createLocalGroup}
+              onDeleteLocal={deleteLocalGroup}
+              onAddLocalExpense={addLocalExpense}
+              onUpdateLocalExpense={updateLocalExpense}
+              onDeleteLocalExpense={deleteLocalExpense}
             />
           )}
         </div>

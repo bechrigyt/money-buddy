@@ -1,55 +1,107 @@
 import { useState } from 'react'
 import type { DbGroup, DbGroupExpense } from '../hooks/useSupabaseGroups'
+import type { Group, GroupExpense } from '../types'
 import { ProjectList } from '../components/group/ProjectList'
 import { GroupDetail } from '../components/group/GroupDetail'
+import { LocalGroupDetail } from '../components/group/LocalGroupDetail'
+
+type Selection =
+  | { kind: 'shared'; id: string }
+  | { kind: 'local'; id: string }
+  | null
 
 interface Props {
-  groups: DbGroup[]
-  loading: boolean
+  // Shared groups
+  sharedGroups: DbGroup[]
+  sharedLoading: boolean
   currentUserId: string
-  onCreateGroup: (name: string, displayName: string) => Promise<{ groupId: string; token: string | null } | null>
-  onDeleteGroup: (id: string) => void
-  onAddExpense: (groupId: string, expense: Omit<DbGroupExpense, 'id' | 'group_id' | 'created_at'>) => Promise<void>
-  onUpdateExpense: (expenseId: string, updates: Omit<DbGroupExpense, 'id' | 'group_id' | 'created_at'>) => Promise<void>
-  onDeleteExpense: (expenseId: string) => Promise<void>
+  onCreateShared: (name: string, displayName: string) => Promise<{ groupId: string; token: string | null } | null>
+  onDeleteShared: (id: string) => void
+  onAddSharedExpense: (groupId: string, expense: Omit<DbGroupExpense, 'id' | 'group_id' | 'created_at'>) => Promise<void>
+  onUpdateSharedExpense: (expenseId: string, updates: Omit<DbGroupExpense, 'id' | 'group_id' | 'created_at'>) => Promise<void>
+  onDeleteSharedExpense: (expenseId: string) => Promise<void>
   onGetInviteToken: (groupId: string) => Promise<string | null>
-  initialGroupId?: string | null
+  initialSharedGroupId?: string | null
+  // Local groups
+  localGroups: Group[]
+  onCreateLocal: (name: string, members: string[]) => Group
+  onDeleteLocal: (id: string) => void
+  onAddLocalExpense: (groupId: string, expense: GroupExpense) => void
+  onUpdateLocalExpense: (groupId: string, expenseId: string, updated: GroupExpense) => void
+  onDeleteLocalExpense: (groupId: string, expenseId: string) => void
 }
 
 export function GroupTab({
-  groups, loading, currentUserId,
-  onCreateGroup, onDeleteGroup,
-  onAddExpense, onUpdateExpense, onDeleteExpense,
-  onGetInviteToken, initialGroupId,
+  sharedGroups, sharedLoading, currentUserId,
+  onCreateShared, onDeleteShared,
+  onAddSharedExpense, onUpdateSharedExpense, onDeleteSharedExpense,
+  onGetInviteToken, initialSharedGroupId,
+  localGroups,
+  onCreateLocal, onDeleteLocal,
+  onAddLocalExpense, onUpdateLocalExpense, onDeleteLocalExpense,
 }: Props) {
-  const [selectedId, setSelectedId] = useState<string | null>(initialGroupId ?? null)
+  const [selected, setSelected] = useState<Selection>(
+    initialSharedGroupId ? { kind: 'shared', id: initialSharedGroupId } : null
+  )
 
-  const selected = selectedId ? groups.find(g => g.id === selectedId) ?? null : null
+  // Shared group selected
+  if (selected?.kind === 'shared') {
+    const group = sharedGroups.find(g => g.id === selected.id) ?? null
+    if (group) {
+      return (
+        <GroupDetail
+          group={group}
+          currentUserId={currentUserId}
+          onBack={() => setSelected(null)}
+          onAddExpense={onAddSharedExpense}
+          onUpdateExpense={onUpdateSharedExpense}
+          onDeleteExpense={onDeleteSharedExpense}
+          onGetInviteToken={onGetInviteToken}
+        />
+      )
+    }
+  }
 
-  if (selected) {
-    return (
-      <GroupDetail
-        group={selected}
-        currentUserId={currentUserId}
-        onBack={() => setSelectedId(null)}
-        onAddExpense={onAddExpense}
-        onUpdateExpense={onUpdateExpense}
-        onDeleteExpense={onDeleteExpense}
-        onGetInviteToken={onGetInviteToken}
-      />
-    )
+  // Local group selected
+  if (selected?.kind === 'local') {
+    const group = localGroups.find(g => g.id === selected.id) ?? null
+    if (group) {
+      return (
+        <LocalGroupDetail
+          group={group}
+          onBack={() => setSelected(null)}
+          onAddExpense={onAddLocalExpense}
+          onUpdateExpense={onUpdateLocalExpense}
+          onDeleteExpense={onDeleteLocalExpense}
+        />
+      )
+    }
+  }
+
+  // Handle creating a local group and immediately navigating to it
+  function handleAddLocal(name: string, members: string[]): string {
+    const group = onCreateLocal(name, members)
+    setSelected({ kind: 'local', id: group.id })
+    return group.id
   }
 
   return (
     <ProjectList
-      groups={groups}
-      loading={loading}
-      onAdd={onCreateGroup}
-      onDelete={id => {
-        if (selectedId === id) setSelectedId(null)
-        onDeleteGroup(id)
+      sharedGroups={sharedGroups}
+      localGroups={localGroups}
+      loading={sharedLoading}
+      onAddShared={onCreateShared}
+      onAddLocal={handleAddLocal}
+      onDeleteShared={id => {
+        if (selected?.kind === 'shared' && selected.id === id) setSelected(null)
+        onDeleteShared(id)
       }}
-      onSelect={g => setSelectedId(g.id)}
+      onDeleteLocal={id => {
+        if (selected?.kind === 'local' && selected.id === id) setSelected(null)
+        onDeleteLocal(id)
+      }}
+      onSelectShared={g => setSelected({ kind: 'shared', id: g.id })}
+      onSelectLocal={g => setSelected({ kind: 'local', id: g.id })}
     />
   )
 }
