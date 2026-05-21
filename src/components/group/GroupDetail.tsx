@@ -109,7 +109,7 @@ export function GroupDetail({ group, currentUserId, onBack, onAddExpense, onUpda
       <div className="bg-[#2B8EEE] rounded-2xl p-4 text-white">
         <p className="text-xs opacity-70 mb-1">Total expenses</p>
         <p className="text-2xl font-bold">{fmt(total)}</p>
-        <p className="text-xs opacity-70 mt-1">{group.expenses.length} items · {group.members.length} member{group.members.length !== 1 ? 's' : ''}</p>
+        <p className="text-xs opacity-70 mt-1">{group.expenses.length} item{group.expenses.length !== 1 ? 's' : ''} · {group.members.length} member{group.members.length !== 1 ? 's' : ''}</p>
       </div>
 
       {/* Actions */}
@@ -160,10 +160,12 @@ export function GroupDetail({ group, currentUserId, onBack, onAddExpense, onUpda
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-gray-900">{fmt(expense.sgd_amount)}</p>
-                      {expense.is_fcy && expense.fcy_amt != null && expense.fcy_cur && (
-                        <p className="text-xs text-gray-400">{expense.fcy_cur} {fmtFcy(expense.fcy_amt, expense.fcy_cur)}</p>
-                      )}
+                      <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">
+                        {fmt(expense.sgd_amount)}
+                        {expense.is_fcy && expense.fcy_amt != null && expense.fcy_cur && (
+                          <span className="text-gray-400 font-normal"> | {expense.fcy_cur} {fmtFcy(expense.fcy_amt, expense.fcy_cur)}</span>
+                        )}
+                      </p>
                     </div>
                     {canDelete && (
                       <>

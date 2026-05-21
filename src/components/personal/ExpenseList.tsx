@@ -89,10 +89,12 @@ export function ExpenseList({ expenses, onDelete, onEdit }: Props) {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-gray-900">{fmt(expense.sgdAmount)}</p>
-                    {expense.isFCY && expense.fcyAmt != null && expense.fcyCur && (
-                      <p className="text-xs text-gray-400">{expense.fcyCur} {fmtFcy(expense.fcyAmt, expense.fcyCur)}</p>
-                    )}
+                    <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">
+                      {fmt(expense.sgdAmount)}
+                      {expense.isFCY && expense.fcyAmt != null && expense.fcyCur && (
+                        <span className="text-gray-400 font-normal"> | {expense.fcyCur} {fmtFcy(expense.fcyAmt, expense.fcyCur)}</span>
+                      )}
+                    </p>
                   </div>
                   <button
                     onClick={() => setEditingExpense(expense)}
