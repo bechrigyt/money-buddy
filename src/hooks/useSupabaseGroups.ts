@@ -87,22 +87,26 @@ export function useSupabaseGroups(userId: string | undefined) {
   // Create a new group + add creator as first member
   const createGroup = useCallback(async (name: string, displayName: string) => {
     if (!userId) return null
-    const { data: g, error } = await supabase
+
+    // Generate ID client-side so we don't need SELECT after INSERT
+    // (SELECT would fail because user isn't in group_members yet)
+    const groupId = crypto.randomUUID()
+
+    const { error: groupError } = await supabase
       .from('groups')
-      .insert({ name, created_by: userId })
-      .select()
-      .single()
-    if (error || !g) { console.error('createGroup error:', error); return null }
+      .insert({ id: groupId, name, created_by: userId })
+    if (groupError) { console.error('createGroup error:', groupError); return null }
 
-    await supabase.from('group_members').insert({
-      group_id: g.id, user_id: userId, display_name: displayName,
-    })
+    const { error: memberError } = await supabase
+      .from('group_members')
+      .insert({ group_id: groupId, user_id: userId, display_name: displayName })
+    if (memberError) { console.error('addMember error:', memberError); return null }
 
-    // Create a permanent invite token for this group
-    await supabase.from('group_invites').insert({ group_id: g.id, created_by: userId })
+    // Create a permanent invite token
+    await supabase.from('group_invites').insert({ group_id: groupId, created_by: userId })
 
     await fetchGroups()
-    return g.id
+    return groupId
   }, [userId, fetchGroups])
 
   // Get or create invite token for a group
