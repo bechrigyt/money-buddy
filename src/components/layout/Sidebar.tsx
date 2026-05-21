@@ -19,7 +19,7 @@ export function Sidebar({ active, onChange }: Props) {
     <aside className="hidden sm:flex flex-col items-center gap-1 py-4 w-20 bg-white border-r border-gray-200 min-h-screen fixed top-0 left-0 z-40">
       {/* Logo mark */}
       <div className="mb-4 mt-2">
-        <LogoMark size={40} />
+        <LogoMark size={36} />
       </div>
 
       {TABS.map(({ id, label, Icon }) => {
