@@ -26,11 +26,11 @@ export function BottomNav({ active, onChange }: Props) {
           >
             <Icon
               size={22}
-              className={isActive ? 'text-[#1D9E75]' : 'text-gray-400'}
+              className={isActive ? 'text-[#2B8EEE]' : 'text-gray-400'}
               strokeWidth={isActive ? 2.5 : 1.8}
             />
             <span
-              className={`text-[10px] font-medium ${isActive ? 'text-[#1D9E75]' : 'text-gray-400'}`}
+              className={`text-[10px] font-medium ${isActive ? 'text-[#2B8EEE]' : 'text-gray-400'}`}
             >
               {label}
             </span>

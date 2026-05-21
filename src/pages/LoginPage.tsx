@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { LogoFull } from '../components/shared/LogoMark'
 
 export function LoginPage() {
   const [email, setEmail] = useState('')
@@ -35,11 +36,9 @@ export function LoginPage() {
   return (
     <div className="min-h-svh bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        {/* Logo / title */}
-        <div className="text-center mb-8">
-          <div className="text-4xl mb-2">💰</div>
-          <h1 className="text-2xl font-bold text-gray-900">Money Buddy</h1>
-          <p className="text-sm text-gray-500 mt-1">Track expenses together</p>
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <LogoFull markSize={64} />
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -71,7 +70,7 @@ export function LoginPage() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#2B8EEE] focus:border-transparent"
             />
             <input
               type="password"
@@ -79,11 +78,11 @@ export function LoginPage() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#2B8EEE] focus:border-transparent"
             />
 
             {message && (
-              <p className={`text-xs px-1 ${message.type === 'error' ? 'text-red-500' : 'text-emerald-600'}`}>
+              <p className={`text-xs px-1 ${message.type === 'error' ? 'text-red-500' : 'text-[#2B8EEE]'}`}>
                 {message.text}
               </p>
             )}
@@ -91,7 +90,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
+              className="w-full bg-[#2B8EEE] hover:bg-[#1d7fd8] text-white rounded-xl py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
             >
               {loading ? 'Loading…' : mode === 'signin' ? 'Sign in' : 'Create account'}
             </button>
@@ -101,7 +100,7 @@ export function LoginPage() {
             {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
             <button
               onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setMessage(null) }}
-              className="text-emerald-600 font-medium hover:underline"
+              className="text-[#2B8EEE] font-medium hover:underline"
             >
               {mode === 'signin' ? 'Sign up' : 'Sign in'}
             </button>

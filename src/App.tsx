@@ -12,6 +12,7 @@ import { useGroups } from './hooks/useGroups'
 import { monthKey } from './lib/format'
 import { setStorageUser } from './lib/storage'
 import { LogOut } from 'lucide-react'
+import { LogoMark } from './components/shared/LogoMark'
 
 type Tab = 'personal' | 'charts' | 'group'
 
@@ -93,7 +94,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="min-h-svh bg-gray-50 flex items-center justify-center">
-        <div className="text-2xl animate-pulse">💰</div>
+        <div className="animate-pulse opacity-70"><LogoMark size={48} /></div>
       </div>
     )
   }
