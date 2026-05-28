@@ -43,8 +43,8 @@ export function LoginPage() {
     <div className="min-h-svh bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <LogoFull markSize={64} />
+        <div className="flex justify-center mb-10">
+          <LogoFull markSize={160} />
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
