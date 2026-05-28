@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowLeft, Plus, Scale, Download, Trash2, Pencil, Link, Check } from 'lucide-react'
 import type { DbGroup, DbGroupExpense } from '../../hooks/useSupabaseGroups'
 import { getCategoryMeta } from '../../types'
@@ -32,19 +32,49 @@ export function GroupDetail({ group, currentUserId, onBack, onAddExpense, onUpda
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [editingExpense, setEditingExpense] = useState<DbGroupExpense | null>(null)
   const [copied, setCopied] = useState(false)
+  const [inviteLink, setInviteLink] = useState<string | null>(null)
+  const [showLinkFallback, setShowLinkFallback] = useState(false)
 
   const sorted = [...group.expenses].sort((a, b) => b.date.localeCompare(a.date))
   const total = group.expenses.reduce((sum, e) => sum + e.sgd_amount, 0)
   const memberNames = group.members.map(m => m.display_name)
   const myName = group.members.find(m => m.user_id === currentUserId)?.display_name ?? 'Me'
 
-  async function handleCopyInvite() {
-    const token = await onGetInviteToken(group.id)
-    if (!token) return
-    const link = `${window.location.origin}?join=${token}`
-    navigator.clipboard.writeText(link)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2500)
+  // Pre-fetch the invite token so the copy is synchronous (required by iOS Safari)
+  useEffect(() => {
+    onGetInviteToken(group.id).then(token => {
+      if (token) setInviteLink(`${window.location.origin}?join=${token}`)
+    })
+  }, [group.id, onGetInviteToken])
+
+  function handleCopyInvite() {
+    const link = inviteLink
+    if (!link) return
+
+    // Try the modern clipboard API first
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(link)
+        .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500) })
+        .catch(() => setShowLinkFallback(true))
+      return
+    }
+
+    // Fallback for older / restricted browsers (e.g. iOS WebView)
+    try {
+      const el = document.createElement('textarea')
+      el.value = link
+      el.style.position = 'fixed'
+      el.style.opacity = '0'
+      document.body.appendChild(el)
+      el.focus()
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    } catch {
+      setShowLinkFallback(true)
+    }
   }
 
   function handleDelete(id: string) {
@@ -93,15 +123,16 @@ export function GroupDetail({ group, currentUserId, onBack, onAddExpense, onUpda
         {/* Invite link button */}
         <button
           onClick={handleCopyInvite}
+          disabled={!inviteLink}
           title="Copy invite link"
-          className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl border transition-all ${
+          className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl border transition-all disabled:opacity-40 ${
             copied
               ? 'bg-green-50 border-green-200 text-green-600'
               : 'bg-white border-gray-200 text-gray-500 hover:border-[#2B8EEE] hover:text-[#2B8EEE]'
           }`}
         >
           {copied ? <Check size={13} /> : <Link size={13} />}
-          {copied ? 'Copied!' : 'Invite'}
+          {copied ? 'Copied!' : inviteLink ? 'Invite' : '…'}
         </button>
       </div>
 
@@ -214,6 +245,25 @@ export function GroupDetail({ group, currentUserId, onBack, onAddExpense, onUpda
       )}
       {showSettle && <SettleUpModal group={legacyGroup} onClose={() => setShowSettle(false)} />}
       {showExport && <ExportModal mode="group" group={legacyGroup} onClose={() => setShowExport(false)} />}
+
+      {/* Fallback: show link for manual copy if clipboard API is blocked */}
+      {showLinkFallback && inviteLink && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-5 space-y-3">
+            <p className="text-sm font-semibold text-gray-900">Copy invite link</p>
+            <p className="text-xs text-gray-500">Long-press and copy the link below:</p>
+            <div className="bg-gray-50 rounded-xl p-3 break-all text-xs text-gray-600 select-all">
+              {inviteLink}
+            </div>
+            <button
+              onClick={() => setShowLinkFallback(false)}
+              className="w-full bg-[#2B8EEE] text-white rounded-xl py-2.5 text-sm font-semibold"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
