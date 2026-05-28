@@ -89,7 +89,7 @@ export function PersonalTab({
         onSetBudget={onSetBudget}
       />
 
-      <ExpenseList expenses={monthExpenses} onDelete={onDeleteExpense} onEdit={onUpdateExpense} />
+      <ExpenseList expenses={monthExpenses} onDelete={onDeleteExpense} onEdit={e => onUpdateExpense(e.id, e)} />
 
       {showAdd && (
         <AddExpenseModal onAdd={onAddExpense} onClose={() => setShowAdd(false)} />
