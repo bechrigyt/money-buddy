@@ -34,10 +34,17 @@ function AppShell() {
   const [defaultTab, setDefaultTab] = useState<'personal' | 'group'>('personal')
   const [tab, setTab] = useState<Tab>('personal')
 
-  // Detect ?join=TOKEN in URL
+  // Detect ?join=TOKEN in URL — also recovers a token saved before Google OAuth redirect
   const [joinToken, setJoinToken] = useState<string | null>(() => {
-    const p = new URLSearchParams(window.location.search)
-    return p.get('join')
+    const urlToken = new URLSearchParams(window.location.search).get('join')
+    if (urlToken) return urlToken
+    // After Google OAuth the URL loses query params; recover from sessionStorage
+    const stored = sessionStorage.getItem('pendingJoinToken')
+    if (stored) {
+      sessionStorage.removeItem('pendingJoinToken')
+      return stored
+    }
+    return null
   })
   const [joinedGroupId, setJoinedGroupId] = useState<string | null>(null)
 

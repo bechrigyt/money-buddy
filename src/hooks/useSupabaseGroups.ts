@@ -138,20 +138,29 @@ export function useSupabaseGroups(userId: string | undefined) {
   // Join a group via invite token
   const joinGroup = useCallback(async (token: string, displayName: string): Promise<{ groupId: string, groupName: string } | null> => {
     if (!userId) return null
-    const { data: invite } = await supabase
+
+    const { data: invite, error: inviteErr } = await supabase
       .from('group_invites')
       .select('group_id, groups(name)')
       .eq('token', token)
       .single()
 
-    if (!invite) return null
+    if (inviteErr || !invite) {
+      console.error('joinGroup: invite lookup failed', inviteErr)
+      return null
+    }
 
     const groupName = (invite.groups as unknown as { name: string } | null)?.name ?? 'Group'
 
     // Insert member (ignore conflict if already a member)
-    await supabase.from('group_members').upsert({
+    const { error: memberErr } = await supabase.from('group_members').upsert({
       group_id: invite.group_id, user_id: userId, display_name: displayName,
     }, { onConflict: 'group_id,user_id', ignoreDuplicates: true })
+
+    if (memberErr) {
+      console.error('joinGroup: member upsert failed', memberErr)
+      return null
+    }
 
     await fetchGroups()
     return { groupId: invite.group_id, groupName }

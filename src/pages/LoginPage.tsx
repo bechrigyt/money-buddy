@@ -27,6 +27,12 @@ export function LoginPage() {
   }
 
   const handleGoogle = async () => {
+    // Preserve any pending ?join=TOKEN across the OAuth redirect.
+    // After Google redirects back, the query string is lost, so we park
+    // the token in sessionStorage and recover it in AppShell.
+    const joinToken = new URLSearchParams(window.location.search).get('join')
+    if (joinToken) sessionStorage.setItem('pendingJoinToken', joinToken)
+
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin },
